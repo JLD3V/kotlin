@@ -20,6 +20,7 @@ import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemDescriptorBase
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.text.VersionComparatorUtil
 import org.jetbrains.kotlin.idea.inspections.gradle.DeprecatedGradleDependencyInspection
 import org.jetbrains.kotlin.idea.inspections.gradle.DifferentKotlinGradleVersionInspection
 import org.jetbrains.kotlin.idea.inspections.gradle.DifferentStdlibGradleVersionInspection
@@ -329,6 +330,42 @@ class GradleInspectionTest : GradleImportingTestCase() {
 
             dependencies {
                 implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.0"
+            }
+        """
+        )
+        importProject()
+
+        val tool = DeprecatedGradleDependencyInspection()
+        val problems = getInspectionResult(tool, localFile)
+
+        Assert.assertTrue(problems.size == 1)
+        Assert.assertEquals(
+            "kotlin-stdlib-jre7 is deprecated since 1.2.0 and should be replaced with kotlin-stdlib-jdk7",
+            problems.single()
+        )
+    }
+
+    @Test
+    fun testJreIsDeprecatedWithoutImplicitVersion() {
+        if (!isGradleAtLeast("4.4")) return
+
+        val localFile = createProjectSubFile(
+            "build.gradle", """
+            group 'Again'
+            version '1.0-SNAPSHOT'
+
+            buildscript {
+                repositories {
+                    mavenCentral()
+                }
+            }
+
+            plugins {
+                id 'org.jetbrains.kotlin.jvm' version '1.2.0'
+            }
+
+            dependencies {
+                compile "org.jetbrains.kotlin:kotlin-stdlib-jre8"
             }
         """
         )

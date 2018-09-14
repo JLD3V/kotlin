@@ -177,4 +177,15 @@ class LambdaReturnValueHintsTest : KotlinLightCodeInsightFixtureTestCase() {
             """
         )
     }
+
+    fun testReturnFunctionType() {
+        check(
+            """
+            fun test() = run {
+                val a = 1
+                <hint text="^run"/>{ a }
+            }
+            """
+        )
+    }
 }

@@ -84,13 +84,18 @@ enum class HintType(desc: String, enabled: Boolean) {
 
     LAMBDA_RETURN_EXPRESSION("Show lambda return expression hints", true) {
         override fun isApplicable(elem: PsiElement) =
-            elem is KtExpression && elem !is KtLambdaExpression && elem !is KtFunctionLiteral &&
-                    !elem.isNameReferenceInCall()
+            elem is KtExpression && elem !is KtLambdaExpression && !elem.isNameReferenceInCall()
 
         override fun provideHints(elem: PsiElement): List<InlayInfo> {
-            if (elem is KtExpression) {
-                return provideLambdaReturnValueHints(elem)
+            val element = when (elem) {
+                is KtFunctionLiteral -> elem.parent
+                else -> elem
             }
+
+            if (element is KtExpression) {
+                return provideLambdaReturnValueHints(element)
+            }
+
             return emptyList()
         }
     },
